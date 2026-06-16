@@ -22,6 +22,7 @@
       "running": { "name": "Running" },
       "connected": { "name": "Connected" },
       "heat": { "name": "Heat" },
+      "ionizer": { "name": "Ionizer" },
       "airbag_arm_shoulder": { "name": "Airbag arm & shoulder" },
       "airbag_back_waist": { "name": "Airbag back & waist" },
       "airbag_leg_foot": { "name": "Airbag leg & foot" },
@@ -29,6 +30,7 @@
     },
     "sensor": {
       "strength": { "name": "3D strength" },
+      "airbag_strength": { "name": "Airbag strength" },
       "program": {
         "name": "Program",
         "state": {

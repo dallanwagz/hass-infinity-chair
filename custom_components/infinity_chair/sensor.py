@@ -31,10 +31,31 @@ async def async_setup_entry(
     async_add_entities(
         [
             InfinityChairStrengthSensor(coordinator),
+            InfinityChairAirbagStrengthSensor(coordinator),
             InfinityChairProgramSensor(coordinator),
             InfinityChairRawStatusSensor(coordinator),
         ]
     )
+
+
+class InfinityChairAirbagStrengthSensor(InfinityChairEntity, SensorEntity):
+    """Airbag strength level (0 = off, 1-5)."""
+
+    _attr_translation_key = "airbag_strength"
+    _attr_icon = "mdi:gauge"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "airbag_strength")
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.connected and self.coordinator.data is not None
+
+    @property
+    def native_value(self) -> int | None:
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.airbag_strength
 
 
 class InfinityChairStrengthSensor(InfinityChairEntity, SensorEntity):

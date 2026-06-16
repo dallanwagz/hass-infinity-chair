@@ -14,8 +14,8 @@ connections), sends the vendor's command frames, and reads the chair's status no
 - **`send_command` service**: fire any of the ~60 vendor command IDs (see the catalog below) from
   automations, for functions without a dedicated button.
 - **Decoded status sensors**: **Program** (which routine is running), **3D strength** (1–5),
-  **Running**, **Heat**, and an airbag binary sensor per zone (**arm & shoulder**, **back & waist**,
-  **leg & foot**, **buttock**).
+  **Airbag strength** (0–5), **Running**, **Heat**, **Ionizer**, and an airbag binary sensor per zone
+  (**arm & shoulder**, **back & waist**, **leg & foot**, **buttock**).
 - **Connected** + **Raw status** diagnostics.
 - Bluetooth auto-discovery — the chair shows up to be added once a proxy sees it.
 
@@ -59,6 +59,7 @@ The 17-byte status frame (`F0 b1..b15 F1`), reverse-engineered byte-by-byte agai
 |---|---|
 | 1 | bit `0x40` = powered on |
 | 2 | bit `0x40` = heat on (low nibble cycles with roller phase) |
+| 3 | low bits (`& 0x07`) = airbag strength (0 off, 1–5); bit `0x40` = ionizer on |
 | 7 | run state (0 = idle, non-zero = running) |
 | 12 | airbag-zone bitmask: `0x10` arm&shoulder, `0x08` back&waist, `0x04` leg&foot, `0x20` buttock (`0x40` = back/roller massage active) |
 | 13 | active program (program # = `b13 >> 2`): `05` recover, `09` stretch, `0d` relax, `11` pain, `15` upper, `19` lower; `1c/1d` manual |

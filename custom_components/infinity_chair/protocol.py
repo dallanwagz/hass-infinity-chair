@@ -74,6 +74,7 @@ class ChairState:
     Byte map (frame = F0 b1..b15 F1):
       b1  bit 0x40 -> powered
       b2  bit 0x40 -> heat on
+      b3  low bits (& 0x07) -> airbag strength (0 off, 1..5); bit 0x40 -> ionizer on
       b7           -> run state (0 off, non-zero running)
       b12 bits     -> airbag zones: 0x10 arm&shoulder, 0x08 back&waist, 0x04 leg&foot, 0x20 buttock
                       (0x40 = back/roller massage active, not an airbag zone)
@@ -85,7 +86,9 @@ class ChairState:
     running: bool
     program: str | None
     heat: bool
+    ionizer: bool
     strength: int
+    airbag_strength: int
     airbag_arm_shoulder: bool
     airbag_back_waist: bool
     airbag_leg_foot: bool
@@ -103,7 +106,9 @@ def parse_status(data: bytes) -> ChairState | None:
         running=data[7] != 0,
         program=_PROGRAM_NAMES.get(data[13]),
         heat=bool(data[2] & 0x40),
+        ionizer=bool(data[3] & 0x40),
         strength=data[14],
+        airbag_strength=data[3] & 0x07,
         airbag_arm_shoulder=bool(airbag & 0x10),
         airbag_back_waist=bool(airbag & 0x08),
         airbag_leg_foot=bool(airbag & 0x04),

@@ -73,6 +73,25 @@ def test_zero_gravity_command():
     assert protocol.build_frame(112) == frame("f0 83 70 0c f1")
 
 
+def test_parse_airbag_strength():
+    # byte 3 low bits = airbag strength (0 off, 1-5)
+    f1 = protocol.parse_status(frame("f0 4d 09 01 26 44 00 03 29 00 00 00 23 1c 01 52 f1"))
+    f5 = protocol.parse_status(frame("f0 4d 0b 05 26 18 04 03 28 00 00 00 23 1c 01 75 f1"))
+    off = protocol.parse_status(frame("f0 4d 0a 00 25 5a 00 03 26 00 00 00 03 1c 01 60 f1"))
+    assert f1.airbag_strength == 1
+    assert f5.airbag_strength == 5
+    assert off.airbag_strength == 0
+
+
+def test_parse_ionizer():
+    # byte 3 bit 0x40 = ionizer; low bits stay = airbag strength
+    on = protocol.parse_status(frame("f0 55 35 42 48 4a 63 03 20 00 00 00 43 19 01 3e f1"))
+    off = protocol.parse_status(frame("f0 55 29 02 48 6d 03 23 22 00 00 00 43 19 01 25 f1"))
+    assert on.ionizer is True
+    assert off.ionizer is False
+    assert on.airbag_strength == 2  # ionizer bit doesn't corrupt the strength read
+
+
 def test_parse_heat():
     on = protocol.parse_status(frame("f0 45 78 02 2d 76 73 03 28 40 09 00 43 1d 01 55 f1"))
     off = protocol.parse_status(frame("f0 45 38 02 2d 72 70 03 29 40 09 00 43 1d 01 1b f1"))

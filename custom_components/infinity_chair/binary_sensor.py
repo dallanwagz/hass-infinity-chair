@@ -41,6 +41,11 @@ STATE_SENSORS: tuple[ChairBinarySensorDescription, ...] = (
         value_fn=lambda s: s.heat,
     ),
     ChairBinarySensorDescription(
+        key="ionizer",
+        translation_key="ionizer",
+        value_fn=lambda s: s.ionizer,
+    ),
+    ChairBinarySensorDescription(
         key="airbag_arm_shoulder",
         translation_key="airbag_arm_shoulder",
         value_fn=lambda s: s.airbag_arm_shoulder,
