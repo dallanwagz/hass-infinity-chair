@@ -1,0 +1,46 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "Add the massage chair {name}?"
+      },
+      "user": {
+        "description": "Select the massage chair to add. Chairs are discovered through your Bluetooth proxies.",
+        "data": {
+          "address": "Device"
+        }
+      }
+    },
+    "abort": {
+      "no_devices_found": "No Infinity massage chairs found. Make sure the chair is powered and within range of a Bluetooth proxy, and that the vendor app is not connected to it.",
+      "already_configured": "This chair is already configured."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "running": { "name": "Running" },
+      "connected": { "name": "Connected" }
+    },
+    "sensor": {
+      "program": { "name": "Program code" },
+      "raw_status": { "name": "Raw status" }
+    },
+    "button": {
+      "power": { "name": "Power" },
+      "auto_recover": { "name": "Auto: Recover" },
+      "auto_stretch": { "name": "Auto: Stretch" },
+      "auto_relax": { "name": "Auto: Relax" },
+      "auto_pain_recovery": { "name": "Auto: Pain recovery" },
+      "auto_upper_body": { "name": "Auto: Upper body" },
+      "auto_lower_body": { "name": "Auto: Lower body" },
+      "knead": { "name": "Knead" },
+      "knock": { "name": "Knock" },
+      "shiatsu": { "name": "Shiatsu" },
+      "tap": { "name": "Tap" },
+      "knead_knock": { "name": "Knead + Knock" },
+      "heat": { "name": "Heat" },
+      "airbag_auto": { "name": "Airbag auto" }
+    }
+  }
+}

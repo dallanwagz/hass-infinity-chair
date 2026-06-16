@@ -1,0 +1,17 @@
+{
+  "domain": "infinity_chair",
+  "name": "Infinity Massage Chair",
+  "bluetooth": [
+    {
+      "local_name": "EVOLUTION-*"
+    }
+  ],
+  "codeowners": ["@dallanwagz"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://github.com/dallanwagz/hass-infinity-chair",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "requirements": ["bleak-retry-connector>=3.5.0"],
+  "version": "0.1.0"
+}
