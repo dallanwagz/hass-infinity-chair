@@ -20,10 +20,31 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         [
+            InfinityChairIntensitySensor(coordinator),
             InfinityChairProgramSensor(coordinator),
             InfinityChairRawStatusSensor(coordinator),
         ]
     )
+
+
+class InfinityChairIntensitySensor(InfinityChairEntity, SensorEntity):
+    """Massage intensity / strength level (1-5)."""
+
+    _attr_translation_key = "intensity"
+    _attr_icon = "mdi:gauge"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "intensity")
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.connected and self.coordinator.data is not None
+
+    @property
+    def native_value(self) -> int | None:
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.intensity
 
 
 class InfinityChairProgramSensor(InfinityChairEntity, SensorEntity):

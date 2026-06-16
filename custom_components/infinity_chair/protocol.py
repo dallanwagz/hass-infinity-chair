@@ -53,14 +53,28 @@ def build_frame(message_id: int) -> bytes:
 class ChairState:
     """Decoded chair status.
 
-    Only the fields validated against hardware are exposed; the remaining bytes of the 17-byte
-    status frame map to the vendor app's status struct and are not yet decoded. ``raw`` carries the
-    full frame as hex for diagnostics and further reverse-engineering.
+    Fields below were validated byte-by-byte against hardware. The remaining bytes of the 17-byte
+    frame (roller position, program timer, technique sub-params) aren't surfaced yet; ``raw`` carries
+    the full frame as hex for diagnostics and further reverse-engineering.
+
+    Byte map (frame = F0 b1..b15 F1):
+      b1  bit 0x40 -> powered
+      b2  bit 0x40 -> heat on
+      b7           -> run state (0 off, non-zero running)
+      b12 bits     -> airbag zones: 0x10 arm&shoulder, 0x08 back&waist, 0x04 leg&foot, 0x20 buttock
+                      (0x40 = back/roller massage active, not an airbag zone)
+      b14          -> intensity level (1..5)
     """
 
     powered: bool
     running: bool
     program: int
+    heat: bool
+    intensity: int
+    airbag_arm_shoulder: bool
+    airbag_back_waist: bool
+    airbag_leg_foot: bool
+    airbag_buttock: bool
     raw: str
 
 
@@ -68,9 +82,16 @@ def parse_status(data: bytes) -> ChairState | None:
     """Parse a status notification frame, or None if it isn't a valid 17-byte F0..F1 frame."""
     if len(data) != 17 or data[0] != _SOI or data[-1] != _EOI:
         return None
+    airbag = data[12]
     return ChairState(
         powered=bool(data[1] & 0x40),
         running=data[7] != 0,
         program=data[2],
+        heat=bool(data[2] & 0x40),
+        intensity=data[14],
+        airbag_arm_shoulder=bool(airbag & 0x10),
+        airbag_back_waist=bool(airbag & 0x08),
+        airbag_leg_foot=bool(airbag & 0x04),
+        airbag_buttock=bool(airbag & 0x20),
         raw=data.hex(),
     )

@@ -11,8 +11,9 @@ connections), sends the vendor's command frames, and reads the chair's status no
 
 - **Command buttons**: Power, the four Auto programs and two body-zone programs, and the manual
   techniques (Knead, Knock, Shiatsu, Tap, Knead+Knock, Heat, Airbag auto).
-- **Running** binary sensor (is a program active) and **Connected** diagnostic sensor.
-- **Program code** / **Raw status** diagnostic sensors (the status frame is partially decoded).
+- **Decoded status sensors**: **Running**, **Heat**, **Intensity** (1–5), and an airbag binary
+  sensor per zone (**arm & shoulder**, **back & waist**, **leg & foot**, **buttock**).
+- **Connected** diagnostic sensor, plus **Program code** / **Raw status** diagnostics.
 - Bluetooth auto-discovery — the chair shows up to be added once a proxy sees it.
 
 ## Requirements
@@ -46,17 +47,21 @@ effect once the chair is running — press **Power** first if it's idle.
 
 ### Status decoding
 
-The 17-byte status frame is partially reverse-engineered:
+The 17-byte status frame (`F0 b1..b15 F1`), reverse-engineered byte-by-byte against hardware:
 
 | Byte | Meaning |
 |---|---|
-| 1 | flags; bit `0x40` = powered on |
-| 2 | active program / technique code |
+| 1 | bit `0x40` = powered on |
+| 2 | bit `0x40` = heat on (low nibble cycles with roller phase) |
 | 7 | run state (0 = idle, non-zero = running) |
+| 12 | airbag-zone bitmask: `0x10` arm&shoulder, `0x08` back&waist, `0x04` leg&foot, `0x20` buttock (`0x40` = back/roller massage active) |
+| 14 | intensity / strength level (1–5) |
 | 15 | checksum |
 
-The remaining bytes map to the vendor app's status struct and aren't decoded yet — the **Raw
-status** sensor exposes the full frame for anyone extending the decode.
+Still unmapped: roller position (b8), program timer (b4:b5), 3D depth, specific auto-program
+identity, and bytes b6/b10/b11/b13. The **Raw status** diagnostic sensor exposes the full frame for
+anyone extending the decode. Note: seat/back/legrest **positions are command-only** — the chair
+moves on command but does not report the resulting angle.
 
 ## Development
 

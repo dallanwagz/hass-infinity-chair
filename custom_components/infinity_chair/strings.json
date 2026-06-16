@@ -20,9 +20,15 @@
   "entity": {
     "binary_sensor": {
       "running": { "name": "Running" },
-      "connected": { "name": "Connected" }
+      "connected": { "name": "Connected" },
+      "heat": { "name": "Heat" },
+      "airbag_arm_shoulder": { "name": "Airbag arm & shoulder" },
+      "airbag_back_waist": { "name": "Airbag back & waist" },
+      "airbag_leg_foot": { "name": "Airbag leg & foot" },
+      "airbag_buttock": { "name": "Airbag buttock" }
     },
     "sensor": {
+      "intensity": { "name": "Intensity" },
       "program": { "name": "Program code" },
       "raw_status": { "name": "Raw status" }
     },
