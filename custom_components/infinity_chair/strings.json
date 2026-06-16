@@ -29,6 +29,16 @@
       "airbag_buttock": { "name": "Airbag buttock" }
     },
     "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "idle": "Idle",
+          "resetting": "Resetting",
+          "ready": "Ready",
+          "running": "Running"
+        }
+      },
+      "time_remaining": { "name": "Time remaining" },
       "strength": { "name": "3D strength" },
       "airbag_strength": { "name": "Airbag strength" },
       "program": {
@@ -63,7 +73,8 @@
       "zero_gravity": { "name": "Zero gravity" },
       "session_10min": { "name": "Session 10 min" },
       "session_20min": { "name": "Session 20 min" },
-      "session_30min": { "name": "Session 30 min" }
+      "session_30min": { "name": "Session 30 min" },
+      "return_to_origin": { "name": "Return to origin" }
     }
   },
   "services": {

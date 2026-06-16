@@ -9,14 +9,16 @@ connections), sends the vendor's command frames, and reads the chair's status no
 
 ## Features
 
-- **Command buttons**: Power, Zero gravity, session length (10/20/30 min), the four Auto programs
-  and two body-zone programs, and the manual techniques (Knead, Knock, Shiatsu, Tap, Knead+Knock,
-  Heat, Airbag auto).
+- **Command buttons**: Power, Return to origin (sends the chair home — handy for getting out via
+  voice control), Zero gravity, session length (10/20/30 min), the four Auto programs and two
+  body-zone programs, and the manual techniques (Knead, Knock, Shiatsu, Tap, Knead+Knock, Heat,
+  Airbag auto).
 - **`send_command` service**: fire any of the ~60 vendor command IDs (see the catalog below) from
   automations, for functions without a dedicated button.
-- **Decoded status sensors**: **Program** (which routine is running), **3D strength** (1–5),
-  **Airbag strength** (0–5), **Running**, **Heat**, **Ionizer**, and an airbag binary sensor per zone
-  (**arm & shoulder**, **back & waist**, **leg & foot**, **buttock**).
+- **Decoded status sensors**: **Status** (idle/resetting/ready/running), **Time remaining**,
+  **Program** (which routine is running), **3D strength** (1–5), **Airbag strength** (0–5),
+  **Running**, **Heat**, **Ionizer**, and an airbag binary sensor per zone (**arm & shoulder**,
+  **back & waist**, **leg & foot**, **buttock**).
 - **Connected** + **Raw status** diagnostics.
 - Bluetooth auto-discovery — the chair shows up to be added once a proxy sees it.
 

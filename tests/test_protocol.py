@@ -45,10 +45,24 @@ def test_parse_idle():
     assert s.running is False
 
 
-def test_parse_powered_running():
-    s = protocol.parse_status(frame("f0 45 03 00 00 00 00 02 2b 00 00 00 03 00 05 02 f1"))
-    assert s.powered is True
-    assert s.running is True
+def test_parse_run_states():
+    ready = protocol.parse_status(frame("f0 45 03 00 00 00 00 02 2b 00 00 00 03 00 05 02 f1"))
+    running = protocol.parse_status(frame("f0 45 27 02 44 57 00 03 2b 00 20 00 41 15 03 4f f1"))
+    resetting = protocol.parse_status(frame("f0 6d 05 00 40 00 00 01 28 00 00 00 01 1c 05 02 f1"))
+    idle = protocol.parse_status(frame("f0 05 03 00 09 30 00 00 2b 00 00 00 03 00 05 0b f1"))
+    assert (ready.run_state, ready.running, ready.powered) == ("ready", False, True)
+    assert (running.run_state, running.running) == ("running", True)
+    assert resetting.run_state == "resetting"
+    assert idle.run_state == "idle"
+
+
+def test_parse_time_remaining():
+    # ((b4 & 0x1F) << 7) | (b5 & 0x7f) while running; high b4 bits are flags
+    start = protocol.parse_status(frame("f0 45 27 02 44 57 00 03 2b 00 20 00 41 15 03 4f f1"))
+    assert start.time_remaining == 599  # ~10:00 at session start
+    # only valid while running -> None when idle/resetting
+    idle = protocol.parse_status(frame("f0 05 03 00 09 30 00 00 2b 00 00 00 03 00 05 0b f1"))
+    assert idle.time_remaining is None
 
 
 def test_parse_strength():

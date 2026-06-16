@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -20,6 +21,8 @@ PROGRAM_OPTIONS = [
     "manual",
 ]
 
+STATUS_OPTIONS = ["idle", "resetting", "ready", "running"]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -30,12 +33,56 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         [
+            InfinityChairStatusSensor(coordinator),
+            InfinityChairTimeRemainingSensor(coordinator),
             InfinityChairStrengthSensor(coordinator),
             InfinityChairAirbagStrengthSensor(coordinator),
             InfinityChairProgramSensor(coordinator),
             InfinityChairRawStatusSensor(coordinator),
         ]
     )
+
+
+class InfinityChairStatusSensor(InfinityChairEntity, SensorEntity):
+    """Run state: idle / resetting / ready / running."""
+
+    _attr_translation_key = "status"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = STATUS_OPTIONS
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "status")
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.connected and self.coordinator.data is not None
+
+    @property
+    def native_value(self) -> str | None:
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.run_state
+
+
+class InfinityChairTimeRemainingSensor(InfinityChairEntity, SensorEntity):
+    """Session time remaining (only valid while a program is running)."""
+
+    _attr_translation_key = "time_remaining"
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "time_remaining")
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.connected and self.coordinator.data is not None
+
+    @property
+    def native_value(self) -> int | None:
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.time_remaining
 
 
 class InfinityChairAirbagStrengthSensor(InfinityChairEntity, SensorEntity):

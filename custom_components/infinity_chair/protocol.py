@@ -45,6 +45,14 @@ COMMANDS: dict[str, int] = {
     "session_30min": 82,
 }
 
+# Run state, decoded from status byte 7.
+_RUN_STATES: dict[int, str] = {
+    0: "idle",
+    1: "resetting",
+    2: "ready",
+    3: "running",
+}
+
 # Active-program identity, decoded from status byte 13 (program number = b13 >> 2).
 _PROGRAM_NAMES: dict[int, str] = {
     0x05: "recover",
@@ -78,7 +86,9 @@ class ChairState:
       b1  bit 0x40 -> powered
       b2  bit 0x40 -> heat on
       b3  low bits (& 0x07) -> airbag strength (0 off, 1..5); bit 0x40 -> ionizer on
-      b7           -> run state (0 off, non-zero running)
+      b4/b5 -> time remaining: ((b4 & 0x1F) << 7) | (b5 & 0x7f) seconds (b4 high bits are flags;
+               only meaningful while running)
+      b7           -> run state (0 idle, 1 resetting, 2 ready, 3 running)
       b12 bits     -> airbag zones: 0x10 arm&shoulder, 0x08 back&waist, 0x04 leg&foot, 0x20 buttock
                       (0x40 = back/roller massage active, not an airbag zone)
       b13          -> active program (see _PROGRAM_NAMES; program # = b13 >> 2)
@@ -87,11 +97,13 @@ class ChairState:
 
     powered: bool
     running: bool
+    run_state: str | None
     program: str | None
     heat: bool
     ionizer: bool
     strength: int
     airbag_strength: int
+    time_remaining: int | None
     airbag_arm_shoulder: bool
     airbag_back_waist: bool
     airbag_leg_foot: bool
@@ -104,14 +116,20 @@ def parse_status(data: bytes) -> ChairState | None:
     if len(data) != 17 or data[0] != _SOI or data[-1] != _EOI:
         return None
     airbag = data[12]
+    run = data[7]
+    # The b4/b5 countdown only holds a real session time while a program is running; idle holds a
+    # default (09 30) that isn't a time.
+    time_remaining = (((data[4] & 0x1F) << 7) | (data[5] & 0x7F)) if run == 3 else None
     return ChairState(
         powered=bool(data[1] & 0x40),
-        running=data[7] != 0,
+        running=run == 3,
+        run_state=_RUN_STATES.get(run),
         program=_PROGRAM_NAMES.get(data[13]),
         heat=bool(data[2] & 0x40),
         ionizer=bool(data[3] & 0x40),
         strength=data[14],
         airbag_strength=data[3] & 0x07,
+        time_remaining=time_remaining,
         airbag_arm_shoulder=bool(airbag & 0x10),
         airbag_back_waist=bool(airbag & 0x08),
         airbag_leg_foot=bool(airbag & 0x04),
