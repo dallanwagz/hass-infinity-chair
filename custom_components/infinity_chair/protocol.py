@@ -40,6 +40,9 @@ COMMANDS: dict[str, int] = {
     "heat": 39,
     "airbag_auto": 68,
     "zero_gravity": 112,
+    "session_10min": 80,
+    "session_20min": 81,
+    "session_30min": 82,
 }
 
 # Active-program identity, decoded from status byte 13 (program number = b13 >> 2).

@@ -60,7 +60,10 @@
       "knead_knock": { "name": "Knead + Knock" },
       "heat": { "name": "Heat" },
       "airbag_auto": { "name": "Airbag auto" },
-      "zero_gravity": { "name": "Zero gravity" }
+      "zero_gravity": { "name": "Zero gravity" },
+      "session_10min": { "name": "Session 10 min" },
+      "session_20min": { "name": "Session 20 min" },
+      "session_30min": { "name": "Session 30 min" }
     }
   },
   "services": {

@@ -73,6 +73,12 @@ def test_zero_gravity_command():
     assert protocol.build_frame(112) == frame("f0 83 70 0c f1")
 
 
+def test_session_length_commands():
+    assert protocol.COMMANDS["session_10min"] == 80
+    assert protocol.COMMANDS["session_20min"] == 81
+    assert protocol.COMMANDS["session_30min"] == 82
+
+
 def test_parse_airbag_strength():
     # byte 3 low bits = airbag strength (0 off, 1-5)
     f1 = protocol.parse_status(frame("f0 4d 09 01 26 44 00 03 29 00 00 00 23 1c 01 52 f1"))

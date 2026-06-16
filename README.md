@@ -9,8 +9,9 @@ connections), sends the vendor's command frames, and reads the chair's status no
 
 ## Features
 
-- **Command buttons**: Power, Zero gravity, the four Auto programs and two body-zone programs, and
-  the manual techniques (Knead, Knock, Shiatsu, Tap, Knead+Knock, Heat, Airbag auto).
+- **Command buttons**: Power, Zero gravity, session length (10/20/30 min), the four Auto programs
+  and two body-zone programs, and the manual techniques (Knead, Knock, Shiatsu, Tap, Knead+Knock,
+  Heat, Airbag auto).
 - **`send_command` service**: fire any of the ~60 vendor command IDs (see the catalog below) from
   automations, for functions without a dedicated button.
 - **Decoded status sensors**: **Program** (which routine is running), **3D strength** (1–5),
