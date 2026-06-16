@@ -28,8 +28,19 @@
       "airbag_buttock": { "name": "Airbag buttock" }
     },
     "sensor": {
-      "intensity": { "name": "Intensity" },
-      "program": { "name": "Program code" },
+      "strength": { "name": "3D strength" },
+      "program": {
+        "name": "Program",
+        "state": {
+          "recover": "Recover",
+          "stretch": "Stretch",
+          "relax": "Relax",
+          "pain_recovery": "Pain recovery",
+          "upper_body": "Upper body",
+          "lower_body": "Lower body",
+          "manual": "Manual"
+        }
+      },
       "raw_status": { "name": "Raw status" }
     },
     "button": {
@@ -46,7 +57,20 @@
       "tap": { "name": "Tap" },
       "knead_knock": { "name": "Knead + Knock" },
       "heat": { "name": "Heat" },
-      "airbag_auto": { "name": "Airbag auto" }
+      "airbag_auto": { "name": "Airbag auto" },
+      "zero_gravity": { "name": "Zero gravity" }
+    }
+  },
+  "services": {
+    "send_command": {
+      "name": "Send command",
+      "description": "Send a raw command (messageId) to the chair. See the project README for the full catalog.",
+      "fields": {
+        "message_id": {
+          "name": "Message ID",
+          "description": "The command's messageId (0-255), e.g. 112 for zero gravity."
+        }
+      }
     }
   }
 }

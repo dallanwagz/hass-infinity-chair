@@ -22,7 +22,8 @@ _EOI = 0xF1  # end of frame
 _VOI = 0x83  # command type byte
 
 # Command catalog: friendly name -> messageId. Power is a toggle (also stops a running program);
-# manual techniques only take effect while the chair is already running.
+# manual techniques only take effect while the chair is already running. Zero gravity, power and
+# the pad-move commands work even while idle.
 COMMANDS: dict[str, int] = {
     "power": 1,
     "auto_recover": 16,
@@ -38,6 +39,19 @@ COMMANDS: dict[str, int] = {
     "knead_knock": 36,
     "heat": 39,
     "airbag_auto": 68,
+    "zero_gravity": 112,
+}
+
+# Active-program identity, decoded from status byte 13 (program number = b13 >> 2).
+_PROGRAM_NAMES: dict[int, str] = {
+    0x05: "recover",
+    0x09: "stretch",
+    0x0D: "relax",
+    0x11: "pain_recovery",
+    0x15: "upper_body",
+    0x19: "lower_body",
+    0x1C: "manual",
+    0x1D: "manual",
 }
 
 
@@ -63,14 +77,15 @@ class ChairState:
       b7           -> run state (0 off, non-zero running)
       b12 bits     -> airbag zones: 0x10 arm&shoulder, 0x08 back&waist, 0x04 leg&foot, 0x20 buttock
                       (0x40 = back/roller massage active, not an airbag zone)
-      b14          -> intensity level (1..5)
+      b13          -> active program (see _PROGRAM_NAMES; program # = b13 >> 2)
+      b14          -> 3D strength level (1..5; set by the 3D button or the menu "strength")
     """
 
     powered: bool
     running: bool
-    program: int
+    program: str | None
     heat: bool
-    intensity: int
+    strength: int
     airbag_arm_shoulder: bool
     airbag_back_waist: bool
     airbag_leg_foot: bool
@@ -86,9 +101,9 @@ def parse_status(data: bytes) -> ChairState | None:
     return ChairState(
         powered=bool(data[1] & 0x40),
         running=data[7] != 0,
-        program=data[2],
+        program=_PROGRAM_NAMES.get(data[13]),
         heat=bool(data[2] & 0x40),
-        intensity=data[14],
+        strength=data[14],
         airbag_arm_shoulder=bool(airbag & 0x10),
         airbag_back_waist=bool(airbag & 0x08),
         airbag_leg_foot=bool(airbag & 0x04),

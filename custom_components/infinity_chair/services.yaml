@@ -1,0 +1,10 @@
+send_command:
+  fields:
+    message_id:
+      required: true
+      example: 112
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box

@@ -51,11 +51,26 @@ def test_parse_powered_running():
     assert s.running is True
 
 
-def test_parse_intensity():
+def test_parse_strength():
     low = protocol.parse_status(frame("f0 4d 0b 00 26 54 00 03 26 00 00 00 03 1c 01 64 f1"))
     high = protocol.parse_status(frame("f0 4d 0a 00 26 30 00 03 20 00 00 00 03 1c 05 0b f1"))
-    assert low.intensity == 1
-    assert high.intensity == 5
+    assert low.strength == 1
+    assert high.strength == 5
+
+
+def test_parse_program():
+    # auto programs identified by byte 13 (program # = b13 >> 2)
+    recover = protocol.parse_status(frame("f0 4d 29 02 2d 6f 10 03 2b 00 09 00 43 05 03 59 f1"))
+    lower = protocol.parse_status(frame("f0 4d 25 02 4d 70 10 03 21 00 00 00 43 19 01 3d f1"))
+    idle = protocol.parse_status(frame("f0 05 03 00 09 30 00 00 2b 00 00 00 03 00 05 0b f1"))
+    assert recover.program == "recover"
+    assert lower.program == "lower_body"
+    assert idle.program is None  # b13 = 00 -> no active program
+
+
+def test_zero_gravity_command():
+    assert protocol.COMMANDS["zero_gravity"] == 112
+    assert protocol.build_frame(112) == frame("f0 83 70 0c f1")
 
 
 def test_parse_heat():

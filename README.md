@@ -9,11 +9,14 @@ connections), sends the vendor's command frames, and reads the chair's status no
 
 ## Features
 
-- **Command buttons**: Power, the four Auto programs and two body-zone programs, and the manual
-  techniques (Knead, Knock, Shiatsu, Tap, Knead+Knock, Heat, Airbag auto).
-- **Decoded status sensors**: **Running**, **Heat**, **Intensity** (1–5), and an airbag binary
-  sensor per zone (**arm & shoulder**, **back & waist**, **leg & foot**, **buttock**).
-- **Connected** diagnostic sensor, plus **Program code** / **Raw status** diagnostics.
+- **Command buttons**: Power, Zero gravity, the four Auto programs and two body-zone programs, and
+  the manual techniques (Knead, Knock, Shiatsu, Tap, Knead+Knock, Heat, Airbag auto).
+- **`send_command` service**: fire any of the ~60 vendor command IDs (see the catalog below) from
+  automations, for functions without a dedicated button.
+- **Decoded status sensors**: **Program** (which routine is running), **3D strength** (1–5),
+  **Running**, **Heat**, and an airbag binary sensor per zone (**arm & shoulder**, **back & waist**,
+  **leg & foot**, **buttock**).
+- **Connected** + **Raw status** diagnostics.
 - Bluetooth auto-discovery — the chair shows up to be added once a proxy sees it.
 
 ## Requirements
@@ -43,7 +46,10 @@ status   <- notify on 0734594a-...:          17-byte  F0 <...> F1  frames
 ```
 
 Power is a toggle (also stops a running program). Manual techniques (Knead, Shiatsu, …) only take
-effect once the chair is running — press **Power** first if it's idle.
+effect once the chair is running — press **Power** first if it's idle. Power, **Zero gravity** (id
+`112`, presets `59/60/61`) and the position/pad-move commands work even while idle. There is **no
+ionizer command** in the protocol. The full ~60-command vendor catalog can be fired via the
+**`send_command`** service.
 
 ### Status decoding
 
@@ -55,13 +61,13 @@ The 17-byte status frame (`F0 b1..b15 F1`), reverse-engineered byte-by-byte agai
 | 2 | bit `0x40` = heat on (low nibble cycles with roller phase) |
 | 7 | run state (0 = idle, non-zero = running) |
 | 12 | airbag-zone bitmask: `0x10` arm&shoulder, `0x08` back&waist, `0x04` leg&foot, `0x20` buttock (`0x40` = back/roller massage active) |
-| 14 | intensity / strength level (1–5) |
+| 13 | active program (program # = `b13 >> 2`): `05` recover, `09` stretch, `0d` relax, `11` pain, `15` upper, `19` lower; `1c/1d` manual |
+| 14 | 3D strength level (1–5; set by the 3D button or menu "strength") |
 | 15 | checksum |
 
-Still unmapped: roller position (b8), program timer (b4:b5), 3D depth, specific auto-program
-identity, and bytes b6/b10/b11/b13. The **Raw status** diagnostic sensor exposes the full frame for
-anyone extending the decode. Note: seat/back/legrest **positions are command-only** — the chair
-moves on command but does not report the resulting angle.
+Still unmapped: roller position (b8), program timer (b4:b5), and bytes b6/b10/b11. The **Raw status**
+diagnostic sensor exposes the full frame for anyone extending the decode. Note: seat/back/legrest
+**positions are command-only** — the chair moves on command but does not report the resulting angle.
 
 ## Development
 
