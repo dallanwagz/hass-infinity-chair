@@ -53,6 +53,23 @@ _RUN_STATES: dict[int, str] = {
     3: "running",
 }
 
+# Manual technique/MODE, decoded from b1 bits 3..5: (b1 >> 3) & 0x07.
+_TECHNIQUES: dict[int, str] = {
+    1: "kneading",
+    2: "knocking",
+    3: "sync",
+    4: "tapping",
+    5: "shiatsu",
+}
+
+# Manual roller width (b2 & 0x03) and massage part/scope (b4 >> 5).
+_WIDTHS: dict[int, str] = {1: "narrow", 2: "medium", 3: "wide"}
+_PARTS: dict[int, str] = {1: "whole", 2: "partial", 3: "point"}
+
+# Roller vertical position (byte 8): measured travel from waist to neck.
+_ROLLER_MIN = 0x20  # bottom / lower back (waist)
+_ROLLER_MAX = 0x2C  # top / neck
+
 # Active-program identity, decoded from status byte 13 (program number = b13 >> 2).
 _PROGRAM_NAMES: dict[int, str] = {
     0x05: "recover",
@@ -63,6 +80,7 @@ _PROGRAM_NAMES: dict[int, str] = {
     0x19: "lower_body",
     0x1C: "manual",
     0x1D: "manual",
+    0x2D: "3d",  # any 3D preset (3D-1/2/3 are not individually distinguished in the status)
 }
 
 
@@ -85,25 +103,41 @@ class ChairState:
     Byte map (frame = F0 b1..b15 F1):
       b1  bit 0x40 -> powered
       b2  bit 0x40 -> heat on
+      b1  bit 0x40 -> powered; bits 3..5 ((b1>>3)&7) -> technique/MODE (see _TECHNIQUES)
+      b2  bit 0x40 -> heat; bits 2..4 -> manual speed (1..6); bits 0..1 -> roller width
       b3  low bits (& 0x07) -> airbag strength (0 off, 1..5); bit 0x40 -> ionizer on
-      b4/b5 -> time remaining: ((b4 & 0x1F) << 7) | (b5 & 0x7f) seconds (b4 high bits are flags;
-               only meaningful while running)
+      b4  high bits (>> 5) -> massage part/scope (1 whole, 2 partial, 3 point)
+      b4/b5 -> time remaining: ((b4 & 0x1F) << 7) | (b5 & 0x7f) seconds (only meaningful while running)
+      b6  high bits (>> 5) -> foot-roller level (0 off, 1..3)
       b7           -> run state (0 idle, 1 resetting, 2 ready, 3 running)
+      b8           -> roller vertical position (0x20 waist .. 0x2c neck)
+      b10 bit 0x40 -> zero gravity engaged
       b12 bits     -> airbag zones: 0x10 arm&shoulder, 0x08 back&waist, 0x04 leg&foot, 0x20 buttock
                       (0x40 = back/roller massage active, not an airbag zone)
       b13          -> active program (see _PROGRAM_NAMES; program # = b13 >> 2)
       b14          -> 3D strength level (1..5; set by the 3D button or the menu "strength")
+
+    NOTE: manual technique (MODE) is not reported — kneading/tapping produce identical frames.
+    The roller-position / speed / width fields are live readings (they reflect motion in some
+    techniques), so they're only surfaced while a program is running.
     """
 
     powered: bool
     running: bool
     run_state: str | None
     program: str | None
+    technique: str | None
     heat: bool
     ionizer: bool
     strength: int
     airbag_strength: int
     time_remaining: int | None
+    roller_position: int | None
+    speed: int | None
+    width: str | None
+    foot_roller: int
+    part: str | None
+    zero_gravity: bool
     airbag_arm_shoulder: bool
     airbag_back_waist: bool
     airbag_leg_foot: bool
@@ -117,19 +151,33 @@ def parse_status(data: bytes) -> ChairState | None:
         return None
     airbag = data[12]
     run = data[7]
-    # The b4/b5 countdown only holds a real session time while a program is running; idle holds a
-    # default (09 30) that isn't a time.
-    time_remaining = (((data[4] & 0x1F) << 7) | (data[5] & 0x7F)) if run == 3 else None
+    running = run == 3
+    # These live in bytes that hold defaults/garbage while idle, so only surface them while running.
+    time_remaining = (((data[4] & 0x1F) << 7) | (data[5] & 0x7F)) if running else None
+    speed = ((data[2] >> 2) & 0x07) if running else None
+    width = _WIDTHS.get(data[2] & 0x03) if running else None
+    if running:
+        span = _ROLLER_MAX - _ROLLER_MIN
+        roller_position = max(0, min(100, round((data[8] - _ROLLER_MIN) * 100 / span)))
+    else:
+        roller_position = None
     return ChairState(
         powered=bool(data[1] & 0x40),
-        running=run == 3,
+        running=running,
         run_state=_RUN_STATES.get(run),
         program=_PROGRAM_NAMES.get(data[13]),
+        technique=_TECHNIQUES.get((data[1] >> 3) & 0x07),
         heat=bool(data[2] & 0x40),
         ionizer=bool(data[3] & 0x40),
         strength=data[14],
         airbag_strength=data[3] & 0x07,
         time_remaining=time_remaining,
+        roller_position=roller_position,
+        speed=speed,
+        width=width,
+        foot_roller=data[6] >> 5,
+        part=_PARTS.get(data[4] >> 5),
+        zero_gravity=bool(data[10] & 0x40),
         airbag_arm_shoulder=bool(airbag & 0x10),
         airbag_back_waist=bool(airbag & 0x08),
         airbag_leg_foot=bool(airbag & 0x04),

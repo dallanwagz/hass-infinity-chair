@@ -26,9 +26,31 @@
       "airbag_arm_shoulder": { "name": "Airbag arm & shoulder" },
       "airbag_back_waist": { "name": "Airbag back & waist" },
       "airbag_leg_foot": { "name": "Airbag leg & foot" },
-      "airbag_buttock": { "name": "Airbag buttock" }
+      "airbag_buttock": { "name": "Airbag buttock" },
+      "zero_gravity": { "name": "Zero gravity" }
     },
     "sensor": {
+      "roller_position": { "name": "Roller position" },
+      "speed": { "name": "Speed" },
+      "foot_roller": { "name": "Foot roller" },
+      "width": {
+        "name": "Roller width",
+        "state": { "narrow": "Narrow", "medium": "Medium", "wide": "Wide" }
+      },
+      "part": {
+        "name": "Part",
+        "state": { "whole": "Whole", "partial": "Partial", "point": "Point" }
+      },
+      "technique": {
+        "name": "Technique",
+        "state": {
+          "kneading": "Kneading",
+          "knocking": "Knocking",
+          "sync": "Sync",
+          "tapping": "Tapping",
+          "shiatsu": "Shiatsu"
+        }
+      },
       "status": {
         "name": "Status",
         "state": {
@@ -50,7 +72,8 @@
           "pain_recovery": "Pain recovery",
           "upper_body": "Upper body",
           "lower_body": "Lower body",
-          "manual": "Manual"
+          "manual": "Manual",
+          "3d": "3D"
         }
       },
       "raw_status": { "name": "Raw status" }

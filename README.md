@@ -16,9 +16,11 @@ connections), sends the vendor's command frames, and reads the chair's status no
 - **`send_command` service**: fire any of the ~60 vendor command IDs (see the catalog below) from
   automations, for functions without a dedicated button.
 - **Decoded status sensors**: **Status** (idle/resetting/ready/running), **Time remaining**,
-  **Program** (which routine is running), **3D strength** (1–5), **Airbag strength** (0–5),
-  **Running**, **Heat**, **Ionizer**, and an airbag binary sensor per zone (**arm & shoulder**,
-  **back & waist**, **leg & foot**, **buttock**).
+  **Program** (routine, incl. a "3D" tag), **Technique** (kneading/knocking/sync/tapping/shiatsu),
+  **Roller position** (0–100%, neck↔waist), **Speed** (1–6), **Roller width** (narrow/medium/wide),
+  **Part** (whole/partial/point), **Foot roller** (0–3), **3D strength** (1–5), **Airbag strength**
+  (0–5), **Running**, **Heat**, **Ionizer**, **Zero gravity**, and an airbag binary sensor per zone
+  (**arm & shoulder**, **back & waist**, **leg & foot**, **buttock**).
 - **Connected** + **Raw status** diagnostics.
 - Bluetooth auto-discovery — the chair shows up to be added once a proxy sees it.
 
@@ -60,18 +62,25 @@ The 17-byte status frame (`F0 b1..b15 F1`), reverse-engineered byte-by-byte agai
 
 | Byte | Meaning |
 |---|---|
-| 1 | bit `0x40` = powered on |
-| 2 | bit `0x40` = heat on (low nibble cycles with roller phase) |
+| 1 | bit `0x40` = powered; `(b1 >> 3) & 0x07` = technique (1 kneading, 2 knocking, 3 sync, 4 tapping, 5 shiatsu) |
+| 2 | bit `0x40` = heat; bits 2–4 (`(b2>>2)&7`) = speed 1–6; bits 0–1 (`b2&3`) = roller width (1 narrow, 2 medium, 3 wide) |
 | 3 | low bits (`& 0x07`) = airbag strength (0 off, 1–5); bit `0x40` = ionizer on |
-| 7 | run state (0 = idle, non-zero = running) |
+| 4 | high bits (`>> 5`) = part (1 whole, 2 partial, 3 point); low 5 bits join b5 for the timer |
+| 4–5 | time remaining = `((b4 & 0x1F) << 7) \| (b5 & 0x7f)` seconds (only while running) |
+| 6 | `>> 5` = foot-roller level (0 off, 1–3) |
+| 7 | run state: 0 idle, 1 resetting, 2 ready, 3 running |
+| 8 | roller vertical position (`0x20` waist … `0x2c` neck) |
+| 10 | bit `0x40` = zero gravity |
 | 12 | airbag-zone bitmask: `0x10` arm&shoulder, `0x08` back&waist, `0x04` leg&foot, `0x20` buttock (`0x40` = back/roller massage active) |
-| 13 | active program (program # = `b13 >> 2`): `05` recover, `09` stretch, `0d` relax, `11` pain, `15` upper, `19` lower; `1c/1d` manual |
-| 14 | 3D strength level (1–5; set by the 3D button or menu "strength") |
+| 13 | active program (program # = `b13 >> 2`): `05` recover, `09` stretch, `0d` relax, `11` pain, `15` upper, `19` lower; `1c/1d` manual; `2d` 3D preset |
+| 14 | 3D strength (1–5 in manual; live roller depth in 3D presets) |
 | 15 | checksum |
 
-Still unmapped: roller position (b8), program timer (b4:b5), and bytes b6/b10/b11. The **Raw status**
-diagnostic sensor exposes the full frame for anyone extending the decode. Note: seat/back/legrest
-**positions are command-only** — the chair moves on command but does not report the resulting angle.
+Known protocol gaps (the chair doesn't report these): the manual **MODE technique is reported**
+(b1) but seat/back/legrest **positions are command-only**; the **foot-roller and speed *levels*** are
+set-only beyond on/off; the **specific 3D preset** (3D-1/2/3) and **3D force** aren't broadcast (only
+"3D mode active"); and the on-screen **session-time display** differs from any reported counter. The
+**Raw status** diagnostic sensor exposes the full frame for anyone extending the decode.
 
 ## Development
 
